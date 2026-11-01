@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>CampusMap – UPN "Veteran" Yogyakarta</title>
+  <meta name="description" content="Peta interaktif dan direktori fasilitas kampus UPN &quot;Veteran&quot; Yogyakarta: Kampus 1 Condongcatur dan Kampus 2 Babarsari.">
+  <meta name="theme-color" content="#0f3d2a">
+  <meta property="og:title" content="CampusMap – UPN &quot;Veteran&quot; Yogyakarta">
+  <meta property="og:description" content="Temukan fakultas, laboratorium, perpustakaan, masjid, parkir, dan fasilitas kampus lainnya.">
+  <meta property="og:type" content="website">
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23176b45'/%3E%3Cpath d='M32 12c-8.8 0-16 6.9-16 15.4C16 39 32 53 32 53s16-14 16-25.6C48 18.9 40.8 12 32 12z' fill='%23fff'/%3E%3Ccircle cx='32' cy='27' r='6' fill='%23e9a820'/%3E%3C/svg%3E">
+
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+  <!-- CSS utama -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<a class="skip-link" href="#contentArea">Lewati ke konten utama</a>
+
+<div class="app-shell">
+
+  <div id="sidebarOverlay" class="sidebar-overlay" aria-hidden="true"></div>
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside id="sidebar" class="sidebar" aria-label="Navigasi utama">
+
+    <div class="sidebar-brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="26" height="26"><path d="M32 8c-9.4 0-17 7.3-17 16.4C15 36.7 32 56 32 56s17-19.3 17-31.6C49 15.3 41.4 8 32 8z" fill="#fff"/><circle cx="32" cy="24.5" r="6.5" fill="#e9a820"/></svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-name">CampusMap</div>
+        <div class="brand-sub">UPN "Veteran" Yogyakarta</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="nav-section-label">Pilih Kampus</div>
+      <div id="campusSwitcher" class="campus-switcher" role="group" aria-label="Pilih kampus">
+        <button class="campus-btn active" data-campus="all" aria-pressed="true" type="button">
+          <span class="campus-btn-label">Semua</span>
+          <span class="campus-btn-sub">Gabungan</span>
+        </button>
+        <button class="campus-btn" data-campus="campus1" aria-pressed="false" type="button">
+          <span class="campus-btn-label">Kampus 1</span>
+          <span class="campus-btn-sub">Condongcatur</span>
+        </button>
+        <button class="campus-btn" data-campus="campus2" aria-pressed="false" type="button">
+          <span class="campus-btn-label">Kampus 2</span>
+          <span class="campus-btn-sub">Babarsari</span>
+        </button>
+      </div>
+
+      <div id="campusInfo" class="campus-info-bar" aria-live="polite">
+        <div id="campusInfoName" class="campus-name">Semua Kampus</div>
+        <div id="campusInfoAddr" class="campus-addr">Condongcatur dan Babarsari, Kabupaten Sleman, DIY</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Menu">
+      <div class="nav-section-label">Menu</div>
+      <button id="navMap" class="nav-item active" type="button"><span class="nav-icon" data-icon="map"></span>Peta Interaktif</button>
+      <button id="navDirectory" class="nav-item" type="button"><span class="nav-icon" data-icon="list"></span>Direktori Fasilitas</button>
+      <button id="navAssistant" class="nav-item" type="button"><span class="nav-icon" data-icon="chat"></span>Campus Assistant</button>
+    </nav>
+
+    <div class="sidebar-stats" aria-label="Ringkasan data">
+      <div class="stat-card"><div class="stat-value" id="statTotal">–</div><div class="stat-label">Lokasi</div></div>
+      <div class="stat-card"><div class="stat-value" id="statPrograms">–</div><div class="stat-label">Prodi</div></div>
+      <div class="stat-card"><div class="stat-value" id="statCategories">–</div><div class="stat-label">Kategori</div></div>
+    </div>
+
+    <div class="sidebar-footer">
+      Peta dasar &copy;
+      <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>.
+      Data fasilitas bersumber dari informasi resmi UPNYK dan titik peta yang tersedia; verifikasi lapangan disarankan.
+    </div>
+  </aside>
+
+  <!-- ===================== AREA UTAMA ===================== -->
+  <div class="main-area">
+
+    <header class="top-header">
+      <button id="menuToggle" class="menu-toggle" type="button" aria-label="Buka atau tutup menu" aria-expanded="false" aria-controls="sidebar" data-icon="menu" data-icon-size="20"></button>
+
+      <div class="search-wrapper">
+        <span class="search-icon" data-icon="search" data-icon-size="17"></span>
+        <input id="searchInput" type="search" class="search-input" placeholder="Cari fasilitas kampus…"
+               autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchResults" aria-label="Cari fasilitas kampus">
+        <kbd class="search-kbd" aria-hidden="true">/</kbd>
+        <div id="searchResults" class="search-results" role="listbox" aria-label="Hasil pencarian"></div>
+      </div>
+
+      <div class="header-actions">
+        <button id="headerAssistant" class="header-btn header-btn-primary" type="button">
+          <span data-icon="chat" data-icon-size="16"></span><span class="header-btn-text">Campus Assistant</span>
+        </button>
+      </div>
+    </header>
+
+    <div id="filterBar" class="filter-bar" role="group" aria-label="Filter kategori"></div>
+
+    <main class="content-area" id="contentArea" tabindex="-1">
+
+      <!-- ===== Peta ===== -->
+      <section id="viewMap" class="view active" aria-label="Peta interaktif">
+        <div id="mapContainer" role="application" aria-label="Peta interaktif UPN Veteran Yogyakarta"></div>
+
+        <div class="map-controls">
+          <button id="locateBtn" class="map-ctrl-btn primary" type="button"><span data-icon="locate" data-icon-size="17"></span><span class="ctrl-label">Lokasi Saya</span></button>
+          <button id="resetViewBtn" class="map-ctrl-btn" type="button"><span data-icon="reset" data-icon-size="17"></span><span class="ctrl-label">Reset Peta</span></button>
+          <button id="boundaryBtn" class="map-ctrl-btn active" type="button" aria-pressed="true"><span data-icon="layers" data-icon-size="17"></span><span class="ctrl-label">Batas Kampus</span></button>
+        </div>
+
+        <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+        <aside id="detailPanel" class="detail-panel" aria-hidden="true" aria-label="Detail lokasi">
+          <div class="detail-header">
+            <h3>Detail Lokasi</h3>
+            <button id="detailClose" class="detail-close" type="button" aria-label="Tutup detail" data-icon="close" data-icon-size="18"></button>
+          </div>
+          <div id="detailBody" class="detail-body"></div>
+        </aside>
+      </section>
+
+      <!-- ===== Direktori ===== -->
+      <section id="viewDirectory" class="view" aria-label="Direktori fasilitas kampus">
+        <div class="dir-wrap">
+          <div class="dir-header">
+            <div class="dir-title">
+              <h2>Direktori Fasilitas</h2>
+              <span id="dirCount" class="count-pill" aria-live="polite">0 hasil</span>
+            </div>
+            <div class="dir-tools">
+              <label class="field field-search">
+                <span class="field-icon" data-icon="search" data-icon-size="16"></span>
+                <input id="dirSearch" type="search" class="dir-search" placeholder="Cari di direktori…" aria-label="Cari fasilitas di direktori" autocomplete="off">
+              </label>
+              <select id="dirFilter" class="dir-filter" aria-label="Filter kategori"></select>
+              <select id="dirType" class="dir-filter" aria-label="Jenis data">
+                <option value="all">Semua Jenis</option>
+                <option value="places">Fakultas &amp; Fasilitas</option>
+                <option value="program">Program Studi</option>
+              </select>
+              <select id="dirSort" class="dir-filter" aria-label="Urutkan">
+                <option value="name">Urut: Nama</option>
+                <option value="category">Urut: Kategori</option>
+                <option value="distance" disabled>Urut: Terdekat</option>
+              </select>
+            </div>
+          </div>
+          <div id="dirList" class="dir-grid" role="list" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- ===== Campus Assistant ===== -->
+      <section id="viewAssistant" class="view" aria-label="Campus Assistant">
+        <div class="assistant-wrap">
+          <div class="assistant-header">
+            <div>
+              <h2>Campus Assistant</h2>
+              <p>Tanyakan lokasi fasilitas dengan bahasa sehari-hari. Asisten ini berbasis kata kunci dan hanya menjawab dari data CampusMap.</p>
+            </div>
+            <button id="chatClear" class="ghost-btn" type="button"><span data-icon="trash" data-icon-size="15"></span> Bersihkan</button>
+          </div>
+
+          <div class="assistant-chips" aria-label="Contoh pertanyaan">
+            <button class="chip" type="button" data-query="Di mana perpustakaan?"><span data-icon="book" data-icon-size="14"></span>Perpustakaan</button>
+            <button class="chip" type="button" data-query="Tempat makan di kampus"><span data-icon="food" data-icon-size="14"></span>Tempat Makan</button>
+            <button class="chip" type="button" data-query="Masjid kampus"><span data-icon="worship" data-icon-size="14"></span>Masjid</button>
+            <button class="chip" type="button" data-query="Parkir terdekat"><span data-icon="parking" data-icon-size="14"></span>Parkir</button>
+            <button class="chip" type="button" data-query="Fasilitas olahraga"><span data-icon="sports" data-icon-size="14"></span>Olahraga</button>
+            <button class="chip" type="button" data-query="Klinik kesehatan"><span data-icon="health" data-icon-size="14"></span>Klinik</button>
+            <button class="chip" type="button" data-query="ATM kampus"><span data-icon="services" data-icon-size="14"></span>ATM</button>
+            <button class="chip" type="button" data-query="Fasilitas di Kampus 2"><span data-icon="building" data-icon-size="14"></span>Kampus 2</button>
+          </div>
+
+          <div id="chatMessages" class="chat-messages" role="log" aria-live="polite"></div>
+
+          <div class="chat-input-row">
+            <input id="chatInput" type="text" class="chat-input" placeholder="Contoh: masjid di Kampus 2" autocomplete="off" aria-label="Ketik pertanyaan">
+            <button id="chatSend" class="chat-send-btn" type="button" aria-label="Kirim pesan" data-icon="send" data-icon-size="18"></button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<noscript>
+  <div class="noscript">CampusMap memerlukan JavaScript. Aktifkan JavaScript pada browser Anda lalu muat ulang halaman.</div>
+</noscript>
+
+<!-- Leaflet JavaScript -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<!-- Konfigurasi & ikon -->
+<script src="js/utils/icons.js"></script>
+<script src="js/config.js"></script>
+
+<!-- Data -->
+<script src="js/data/campuses.js"></script>
+<script src="js/data/facilities.js"></script>
+
+<!-- Utilities -->
+<script src="js/utils/distance.js"></script>
+
+<!-- Modul -->
+<script src="js/modules/campusManager.js"></script>
+<script src="js/modules/map.js"></script>
+<script src="js/modules/assistant.js"></script>
+
+<!-- Aplikasi utama -->
+<script src="js/app.js"></script>
+
+</body>
+</html>
